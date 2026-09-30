@@ -1,0 +1,57 @@
+version: 2
+
+project_name: totext
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X github.com/yakovlef/totext/cmd.version={{.Version}}
+
+archives:
+  - formats: [tar.gz]
+    name_template: >-
+      {{ .ProjectName }}_{{ .Os }}_{{ .Arch }}
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+brews:
+  - repository:
+      owner: yakovlef
+      name: homebrew-totext
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/yakovlef/totext"
+    description: "Local audio/video transcription to text via whisper.cpp"
+    license: "MIT"
+    install: |
+      bin.install "totext"
+    dependencies:
+      - name: ffmpeg
+      - name: whisper-cpp
+    caveats: |
+      totext downloads the whisper model (~1.5GB) on first run.
+      Check/install dependencies manually: totext doctor
